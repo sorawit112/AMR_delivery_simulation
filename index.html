@@ -359,6 +359,75 @@
             display: none !important;
         }
 
+        #transition-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .transition-path {
+            stroke: var(--accent-blue);
+            stroke-width: 3;
+            stroke-dasharray: 10, 10;
+            fill: none;
+            animation: march 1s linear infinite, blink 1.5s ease-in-out infinite;
+        }
+
+        @keyframes march {
+            from {
+                stroke-dashoffset: 20;
+            }
+
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 0.9;
+            }
+        }
+
+        .transition-label-bg {
+            fill: var(--bg-color);
+            stroke: var(--accent-blue);
+            stroke-width: 1;
+        }
+
+        .transition-label-text {
+            fill: var(--accent-blue);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: bold;
+            text-anchor: middle;
+            dominant-baseline: middle;
+        }
+
+        .transition-label-bg.amr1 {
+            fill: var(--accent-blue);
+            stroke: white;
+        }
+
+        .transition-label-bg.amr2 {
+            fill: var(--accent-purple);
+            stroke: white;
+        }
+
+        .transition-label-text.amr-dark {
+            fill: var(--bg-color);
+        }
+
         @media (max-width: 1024px) {
             .main-grid {
                 grid-template-columns: 1fr;
@@ -548,6 +617,14 @@
         </div>
     </div>
 
+    <svg id="transition-layer">
+        <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="var(--accent-blue)" />
+            </marker>
+        </defs>
+    </svg>
+
     <div id="amr1" class="amr-icon amr1">1</div>
     <div id="amr2" class="amr-icon amr2">2</div>
 
@@ -674,12 +751,100 @@
                     const scrollY = window.scrollY;
                     el.style.left = (boxRect.left + scrollX + boxRect.width / 2 - 25) + 'px';
                     el.style.top = (boxRect.top + scrollY + boxRect.height / 2 - 25) + 'px';
+
+                    // Hide AMR icon during movement
+                    if (amr.state === 'MOVING') {
+                        el.style.display = 'none';
+                    } else {
+                        el.style.display = 'flex';
+                    }
                 }
 
                 if (statusCard) {
                     statusCard.querySelector('.amr-location').textContent = amr.location + (amr.target ? ` → ${amr.target}` : '');
                     statusCard.querySelectorAll('.amr-state-text')[0].textContent = amr.state + (amr.timer > 0 ? ` (${Math.ceil(amr.timer)}s)` : '');
                     statusCard.querySelector('.carrying').textContent = `Carrying: ${amr.carrying || 'None'}`;
+                }
+            }
+
+            updateTransitionAnimations();
+        }
+
+        function updateTransitionAnimations() {
+            const svg = document.getElementById('transition-layer');
+            // Remove all existing paths and labels (keep defs)
+            const children = Array.from(svg.children);
+            children.forEach(child => {
+                if (child.tagName !== 'defs') svg.removeChild(child);
+            });
+
+            for (const [id, amr] of Object.entries(state.amrs)) {
+                if (amr.state === 'MOVING' && amr.target) {
+                    const fromStation = state.stations[amr.location];
+                    const toStation = state.stations[amr.target];
+
+                    if (!fromStation || !toStation) continue;
+
+                    // Filter transitions: MP->W1, W1->POF, POF->HOME, POF->MP
+                    const fType = fromStation.type;
+                    const tType = toStation.type;
+                    const isValidTransition =
+                        (fType === 'HOME' && tType === 'POF') ||
+                        (fType === 'MP' && tType === 'WAITING') ||
+                        (fType === 'WAITING' && tType === 'POF') ||
+                        (fType === 'POF' && tType === 'HOME') ||
+                        (fType === 'POF' && tType === 'MP') ||
+                        (fType === 'MP' && tType === 'MP');
+
+                    if (!isValidTransition) continue;
+
+                    const fromEl = document.getElementById(`station-${amr.location}`);
+                    const toEl = document.getElementById(`station-${amr.target}`);
+
+                    if (fromEl && toEl) {
+                        const fromRect = fromEl.querySelector('.station-box').getBoundingClientRect();
+                        const toRect = toEl.querySelector('.station-box').getBoundingClientRect();
+                        const scrollX = window.scrollX;
+                        const scrollY = window.scrollY;
+
+                        const x1 = fromRect.left + scrollX + fromRect.width / 2;
+                        const y1 = fromRect.top + scrollY + fromRect.height / 2;
+                        const x2 = toRect.left + scrollX + toRect.width / 2;
+                        const y2 = toRect.top + scrollY + toRect.height / 2;
+
+                        // Calculate interpolation
+                        const progress = amr.initialTimer > 0 ? 1 - (amr.timer / amr.initialTimer) : 0;
+                        const curX = x1 + (x2 - x1) * progress;
+                        const curY = y1 + (y2 - y1) * progress;
+
+                        // Draw path
+                        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                        path.setAttribute("d", `M ${x1} ${y1} L ${x2} ${y2}`);
+                        path.setAttribute("class", "transition-path");
+                        path.setAttribute("marker-end", "url(#arrowhead)");
+                        svg.appendChild(path);
+
+                        // Draw moving label/icon
+                        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+
+                        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                        rect.setAttribute("x", curX - 25);
+                        rect.setAttribute("y", curY - 10);
+                        rect.setAttribute("width", 50);
+                        rect.setAttribute("height", 20);
+                        rect.setAttribute("rx", 5);
+                        rect.setAttribute("class", `transition-label-bg amr${amr.id}`);
+                        g.appendChild(rect);
+
+                        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                        text.setAttribute("x", curX);
+                        text.setAttribute("y", curY);
+                        text.setAttribute("class", "transition-label-text amr-dark");
+                        text.textContent = `AMR ${amr.id}`;
+                        g.appendChild(text);
+
+                        svg.appendChild(g);
+                    }
                 }
             }
         }
@@ -796,8 +961,8 @@
                     } else {
                         // We just placed an EMPTY trolley (carrying is null).
                         // Look for full trolleys to pick up in MP area.
-                        const nextFullMP = state.mpList.find(m => state.stations[m].trolleyState === 2);
-                        if (nextFullMP) {
+                        const nextFullMP = state.mpList[state.nextMPIndex];  //state.mpList.find(m => state.stations[m].trolleyState === 2);
+                        if (state.stations[nextFullMP].trolleyState === 2) {
                             startMovement(amr, nextFullMP, () => {
                                 amr.state = 'PICKING';
                                 amr.timer = state.config.actionTime;
@@ -870,6 +1035,7 @@
                 time = state.config.travelTimes[target][amr.location];
             }
             amr.timer = time;
+            amr.initialTimer = time;
             amr.onArrival = callback;
         }
 
