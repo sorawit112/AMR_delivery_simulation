@@ -33,150 +33,151 @@
     </header>
 
     <div class="main-grid">
-        <div class="panel">
-            <div class="panel-title">POF Area</div>
-            <div class="station-grid">
-                <div class="station-container" id="station-POF-A">
-                    <div class="station-box">
-                        <div class="indicator"></div>
-                        <div class="trolley"></div>
-                        <div class="status-badge">0</div>
-                        <div class="progress-bar">
-                            <div class="progress-fill"></div>
-                        </div>
+        <div class="panel simulation-map">
+            <div class="map-label" style="top: 1.5rem; left: 2rem;">Logistics Operations</div>
+
+            <!-- Visual Zones -->
+            <div class="map-zone" id="zone-pof">
+                <div class="map-label" style="top: -1.2rem; left: 0;">POF</div>
+            </div>
+            <div class="map-zone" id="zone-mp">
+                <div class="map-label" style="top: -1.2rem; left: 0;">Market Place</div>
+            </div>
+
+            <!-- POF Area -->
+            <div class="station-container" id="station-POF-A">
+                <div class="station-box">
+                    <div class="indicator"></div>
+                    <div class="trolley"></div>
+                    <div class="status-badge">0</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
                     </div>
-                    <div class="station-label">POF-A</div>
                 </div>
-                <div class="station-container" id="station-POF-B">
-                    <div class="station-box">
-                        <div class="indicator"></div>
-                        <div class="trolley"></div>
-                        <div class="status-badge">0</div>
-                        <div class="progress-bar">
-                            <div class="progress-fill"></div>
-                        </div>
+                <div class="station-label">1: Empty A</div>
+            </div>
+            <div class="station-container" id="station-POF-B">
+                <div class="station-box">
+                    <div class="indicator"></div>
+                    <div class="trolley"></div>
+                    <div class="status-badge">0</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
                     </div>
-                    <div class="station-label">POF-B</div>
                 </div>
+                <div class="station-label">2: Full B</div>
+            </div>
+
+            <!-- Waiting Area -->
+            <div class="station-container" id="station-W1">
+                <div class="station-box">
+                    <div class="trolley"></div>
+                    <div class="status-badge">0</div>
+                </div>
+                <div class="station-label">WAITING</div>
+            </div>
+
+            <!-- Home Points -->
+            <div class="station-container" id="station-HOME-POF">
+                <div class="station-box"></div>
+                <div class="station-label">HOME POF</div>
+            </div>
+            <div class="station-container" id="station-HOME-MP">
+                <div class="station-box"></div>
+                <div class="station-label">HOME MP</div>
+            </div>
+
+            <!-- Market Place Cluster -->
+            <div class="station-container" id="station-MP1">
+                <div class="station-box">
+                    <div class="indicator"></div>
+                    <div class="trolley"></div>
+                    <div class="status-badge">0</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                </div>
+                <div class="station-label">MP1</div>
+            </div>
+            <div class="station-container" id="station-MP2">
+                <div class="station-box">
+                    <div class="indicator"></div>
+                    <div class="trolley"></div>
+                    <div class="status-badge">0</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                </div>
+                <div class="station-label">MP2</div>
+            </div>
+            <div class="station-container" id="station-MP3">
+                <div class="station-box">
+                    <div class="indicator"></div>
+                    <div class="trolley"></div>
+                    <div class="status-badge">0</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                </div>
+                <div class="station-label">MP3</div>
+            </div>
+            <div class="station-container" id="station-MP4">
+                <div class="station-box">
+                    <div class="indicator"></div>
+                    <div class="trolley"></div>
+                    <div class="status-badge">0</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                </div>
+                <div class="station-label">MP4</div>
             </div>
         </div>
 
-        <div class="panel">
-            <div class="panel-title">Waiting Area</div>
-            <div class="station-grid">
-                <div class="station-container" id="station-W1">
-                    <div class="station-box">
-                        <div class="trolley"></div>
-                        <div class="status-badge">0</div>
-                    </div>
-                    <div class="station-label">W1</div>
+        <div class="panel status-panel" style="grid-column: span 3; margin-top: 2rem;">
+            <div class="amr-status-card" id="status-amr1">
+                <div class="amr-status-header">
+                    <div class="amr-name">AMR 1</div>
+                    <div class="amr-location">HOME-POF</div>
                 </div>
+                <div class="amr-state-text">IDLE</div>
+                <div class="amr-state-text carrying">Carrying: None</div>
+            </div>
+            <div class="amr-status-card" id="status-amr2">
+                <div class="amr-status-header">
+                    <div class="amr-name">AMR 2</div>
+                    <div class="amr-location">W1</div>
+                </div>
+                <div class="amr-state-text">IDLE</div>
+                <div class="amr-state-text carrying">Carrying: Full Trolley</div>
             </div>
         </div>
 
-        <div class="panel">
-            <div class="panel-title">Home Points</div>
-            <div class="station-grid">
-                <div class="station-container" id="station-HOME-POF">
-                    <div class="station-box"></div>
-                    <div class="station-label">HOME-POF</div>
-                </div>
-                <div class="station-container" id="station-HOME-MP">
-                    <div class="station-box"></div>
-                    <div class="station-label">HOME-MP</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="panel market-place">
-            <div class="panel-title">Market Place Area</div>
-            <div class="station-grid">
-                <div class="station-container" id="station-MP1">
-                    <div class="station-box">
-                        <div class="indicator"></div>
-                        <div class="trolley"></div>
-                        <div class="status-badge">0</div>
-                        <div class="progress-bar">
-                            <div class="progress-fill"></div>
-                        </div>
+        <div class="panel graph-panel">
+            <div class="panel-title">POF Trolley State History (Interactive Graph)</div>
+            <canvas id="state-graph"></canvas>
+            <div
+                style="font-size: 0.75rem; color: var(--text-secondary); display: flex; gap: 2rem; justify-content: space-between; align-items: center;">
+                <div style="display: flex; gap: 2rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <div style="width: 12px; height: 12px; background: #38bdf8; border-radius: 2px;"></div> POF-A
+                        State
                     </div>
-                    <div class="station-label">MP1</div>
-                </div>
-                <div class="station-container" id="station-MP2">
-                    <div class="station-box">
-                        <div class="indicator"></div>
-                        <div class="trolley"></div>
-                        <div class="status-badge">0</div>
-                        <div class="progress-bar">
-                            <div class="progress-fill"></div>
-                        </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <div style="width: 12px; height: 12px; background: #ef4444; border-radius: 2px;"></div> POF-B
+                        State (Dashed)
                     </div>
-                    <div class="station-label">MP2</div>
+                    <div>[Scroll to zoom • Drag to pan • Double-click to reset]</div>
                 </div>
-                <div class="station-container" id="station-MP3">
-                    <div class="station-box">
-                        <div class="indicator"></div>
-                        <div class="trolley"></div>
-                        <div class="status-badge">0</div>
-                        <div class="progress-bar">
-                            <div class="progress-fill"></div>
-                        </div>
-                    </div>
-                    <div class="station-label">MP3</div>
-                </div>
-                <div class="station-container" id="station-MP4">
-                    <div class="station-box">
-                        <div class="indicator"></div>
-                        <div class="trolley"></div>
-                        <div class="status-badge">0</div>
-                        <div class="progress-bar">
-                            <div class="progress-fill"></div>
-                        </div>
-                    </div>
-                    <div class="station-label">MP4</div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button id="btn-export-csv" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;">Export
+                        CSV</button>
+                    <button id="btn-export-img" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;">Save
+                        Image</button>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="panel status-panel">
-        <div class="amr-status-card" id="status-amr1">
-            <div class="amr-status-header">
-                <div class="amr-name">AMR 1</div>
-                <div class="amr-location">HOME-POF</div>
-            </div>
-            <div class="amr-state-text">IDLE</div>
-            <div class="amr-state-text carrying">Carrying: None</div>
-        </div>
-        <div class="amr-status-card" id="status-amr2">
-            <div class="amr-status-header">
-                <div class="amr-name">AMR 2</div>
-                <div class="amr-location">W1</div>
-            </div>
-            <div class="amr-state-text">IDLE</div>
-            <div class="amr-state-text carrying">Carrying: Full Trolley</div>
-        </div>
-    </div>
-
-    <div class="panel graph-panel">
-        <div class="panel-title">POF Trolley State History (Interactive Graph)</div>
-        <canvas id="state-graph"></canvas>
-        <div
-            style="font-size: 0.75rem; color: var(--text-secondary); display: flex; gap: 2rem; justify-content: space-between; align-items: center;">
-            <div style="display: flex; gap: 2rem;">
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <div style="width: 12px; height: 12px; background: #38bdf8; border-radius: 2px;"></div> POF-A State
-                </div>
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <div style="width: 12px; height: 12px; background: #ef4444; border-radius: 2px;"></div> POF-B State (Dashed)
-                </div>
-                <div>[Scroll to zoom • Drag to pan • Double-click to reset]</div>
-            </div>
-            <div style="display: flex; gap: 0.5rem;">
-                <button id="btn-export-csv" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;">Export CSV</button>
-                <button id="btn-export-img" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;">Save Image</button>
-            </div>
-        </div>
     </div>
 
     <svg id="transition-layer">
@@ -412,7 +413,7 @@
                 const legendY = this.padding.top + 10;
                 ctx.textAlign = 'left';
                 ctx.font = '10px JetBrains Mono';
-                
+
                 // Legend Item 1 (POF-A)
                 ctx.strokeStyle = '#38bdf8';
                 ctx.lineWidth = 2;

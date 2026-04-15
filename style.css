@@ -64,7 +64,8 @@ h1 {
     align-items: center;
 }
 
-button, .nav-link {
+button,
+.nav-link {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border);
     color: white;
@@ -80,7 +81,8 @@ button, .nav-link {
     font-size: 0.875rem;
 }
 
-button:hover, .nav-link:hover {
+button:hover,
+.nav-link:hover {
     background: rgba(255, 255, 255, 0.1);
     transform: translateY(-2px);
 }
@@ -271,6 +273,117 @@ button.active {
     background: var(--accent-red);
 }
 
+/* Simulation Map Layout */
+.simulation-map {
+    position: relative;
+    grid-column: span 3;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    border-radius: 2rem;
+    height: 500px;
+    overflow: hidden;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+}
+
+.map-label {
+    position: absolute;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    pointer-events: none;
+}
+
+.map-zone {
+    position: absolute;
+    border: 1.5px dashed var(--border);
+    background: rgba(255, 255, 255, 0.01);
+    border-radius: 1rem;
+    pointer-events: none;
+    z-index: 0;
+}
+
+#zone-pof {
+    left: 3%;
+    top: 25%;
+    width: 20%;
+    height: 25%;
+}
+
+#zone-mp {
+    left: 63%;
+    top: 20%;
+    width: 35%;
+    height: 50%;
+}
+
+.station-container {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    transition: all 0.5s ease;
+}
+
+.station-container .station-box {
+    width: 80px;
+    height: 60px;
+}
+
+/* Coordinates based on reference image */
+#station-POF-A {
+    left: 5%;
+    top: 30%;
+}
+
+#station-POF-B {
+    left: 15%;
+    top: 30%;
+}
+
+#station-W1 {
+    left: 35%;
+    top: 35%;
+}
+
+#station-HOME-POF {
+    left: 5%;
+    top: 65%;
+}
+
+#station-HOME-MP {
+    left: 77%;
+    top: 25%;
+}
+
+/* MP Cluster (Staggered) */
+#station-MP1 {
+    left: 65%;
+    top: 35%;
+}
+
+#station-MP2 {
+    left: 70%;
+    top: 50%;
+}
+
+#station-MP3 {
+    left: 85%;
+    top: 35%;
+}
+
+#station-MP4 {
+    left: 90%;
+    top: 50%;
+}
+
 .market-place {
     grid-column: span 3;
 }
@@ -316,7 +429,8 @@ button.active {
     color: var(--text-secondary);
 }
 
-.config-panel, .graph-panel {
+.config-panel,
+.graph-panel {
     grid-column: span 3;
 }
 
@@ -443,7 +557,8 @@ canvas {
         grid-column: span 1;
     }
 
-    .config-panel, .graph-panel {
+    .config-panel,
+    .graph-panel {
         grid-column: span 1;
     }
 
