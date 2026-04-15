@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMR Pick-Delivery Simulation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=JetBrains+Mono:wght@400;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --accent-blue: #38bdf8;
+            --accent-purple: #818cf8;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: rgba(255, 255, 255, 0.1);
+            --trolley-empty: #64748b;
+            --trolley-full: #38bdf8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-color);
+            background-image:
+                radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
+                radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            overflow-x: hidden;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            background: var(--card-bg);
+            padding: 1.5rem 2rem;
+            border-radius: 1.5rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        button {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        button.active {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: var(--bg-color);
+            font-weight: 600;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .panel {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .panel-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .station-grid {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .station-container {
+            position: relative;
+            width: 100px;
+            height: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .station-box {
+            width: 80px;
+            height: 80px;
+            border: 2px dashed var(--border);
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .station-box.has-trolley {
+            border-style: solid;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .trolley {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .trolley.empty {
+            background: var(--trolley-empty);
+        }
+
+        .trolley.full {
+            background: var(--trolley-full);
+        }
+
+        .status-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #1e293b;
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            z-index: 5;
+        }
+
+        .indicator {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 1rem;
+            border: 2px solid transparent;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .indicator.consuming {
+            border-color: var(--warning);
+            animation: pulse-ring 2s infinite;
+        }
+
+        .indicator.refilling {
+            border-color: var(--accent-purple);
+            animation: pulse-ring 2s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(0.95);
+                opacity: 0.7;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.3;
+            }
+
+            100% {
+                transform: scale(0.95);
+                opacity: 0.7;
+            }
+        }
+
+        .progress-bar {
+            position: absolute;
+            bottom: -5px;
+            left: 10%;
+            width: 80%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            display: none;
+            z-index: 2;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--accent-blue);
+            transition: width 0.1s linear;
+        }
+
+        .amr-icon {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: var(--text-primary);
+            color: var(--bg-color);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 800;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+            z-index: 100;
+            transition: all 0.5s ease-in-out;
+            pointer-events: none;
+        }
+
+        .amr-icon.amr1 {
+            background: var(--accent-blue);
+        }
+
+        .amr-icon.amr2 {
+            background: var(--accent-purple);
+        }
+
+        .market-place {
+            grid-column: span 3;
+        }
+
+        .status-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .amr-status-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 1rem;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .amr-status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .amr-name {
+            font-weight: 600;
+            font-size: 1.125rem;
+        }
+
+        .amr-location {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-blue);
+            font-size: 0.875rem;
+        }
+
+        .amr-state-text {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .config-panel {
+            grid-column: span 3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            width: 60px;
+            font-family: inherit;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .market-place {
+                grid-column: span 1;
+            }
+
+            .config-panel {
+                grid-column: span 1;
+            }
+
+            .status-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>AMR Simulation Dashboard</h1>
+        <div class="controls">
+            <div id="sim-time"
+                style="font-family: 'JetBrains Mono'; margin-right: 2rem; font-size: 1.25rem; color: var(--accent-blue);">
+                00:00:00</div>
+            <button id="btn-play"><span>▶</span> Play</button>
+            <button id="btn-pause" class="active"><span>⏸</span> Pause</button>
+            <div style="width: 1px; height: 24px; background: var(--border); margin: 0 1rem;"></div>
+            <button class="btn-speed" data-speed="1">1x</button>
+            <button class="btn-speed" data-speed="5">5x</button>
+            <button class="btn-speed" data-speed="10">10x</button>
+            <button class="btn-speed" data-speed="100">100x</button>
+        </div>
+    </header>
+
+    <div class="main-grid">
+        <div class="panel">
+            <div class="panel-title">POF Area</div>
+            <div class="station-grid">
+                <div class="station-container" id="station-POF-A">
+                    <div class="station-box">
+                        <div class="indicator"></div>
+                        <div class="trolley"></div>
+                        <div class="status-badge">0</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                    </div>
+                    <div class="station-label">POF-A</div>
+                </div>
+                <div class="station-container" id="station-POF-B">
+                    <div class="station-box">
+                        <div class="indicator"></div>
+                        <div class="trolley"></div>
+                        <div class="status-badge">0</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                    </div>
+                    <div class="station-label">POF-B</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Waiting Area</div>
+            <div class="station-grid">
+                <div class="station-container" id="station-W1">
+                    <div class="station-box">
+                        <div class="trolley"></div>
+                        <div class="status-badge">0</div>
+                    </div>
+                    <div class="station-label">W1</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Home Points</div>
+            <div class="station-grid">
+                <div class="station-container" id="station-HOME-POF">
+                    <div class="station-box"></div>
+                    <div class="station-label">HOME-POF</div>
+                </div>
+                <div class="station-container" id="station-HOME-MP">
+                    <div class="station-box"></div>
+                    <div class="station-label">HOME-MP</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel market-place">
+            <div class="panel-title">Market Place Area</div>
+            <div class="station-grid">
+                <div class="station-container" id="station-MP1">
+                    <div class="station-box">
+                        <div class="indicator"></div>
+                        <div class="trolley"></div>
+                        <div class="status-badge">0</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                    </div>
+                    <div class="station-label">MP1</div>
+                </div>
+                <div class="station-container" id="station-MP2">
+                    <div class="station-box">
+                        <div class="indicator"></div>
+                        <div class="trolley"></div>
+                        <div class="status-badge">0</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                    </div>
+                    <div class="station-label">MP2</div>
+                </div>
+                <div class="station-container" id="station-MP3">
+                    <div class="station-box">
+                        <div class="indicator"></div>
+                        <div class="trolley"></div>
+                        <div class="status-badge">0</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                    </div>
+                    <div class="station-label">MP3</div>
+                </div>
+                <div class="station-container" id="station-MP4">
+                    <div class="station-box">
+                        <div class="indicator"></div>
+                        <div class="trolley"></div>
+                        <div class="status-badge">0</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                    </div>
+                    <div class="station-label">MP4</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel status-panel">
+        <div class="amr-status-card" id="status-amr1">
+            <div class="amr-status-header">
+                <div class="amr-name">AMR 1</div>
+                <div class="amr-location">HOME-POF</div>
+            </div>
+            <div class="amr-state-text">IDLE</div>
+            <div class="amr-state-text carrying">Carrying: None</div>
+        </div>
+        <div class="amr-status-card" id="status-amr2">
+            <div class="amr-status-header">
+                <div class="amr-name">AMR 2</div>
+                <div class="amr-location">W1</div>
+            </div>
+            <div class="amr-state-text">IDLE</div>
+            <div class="amr-state-text carrying">Carrying: Full Trolley</div>
+        </div>
+    </div>
+
+    <div class="panel config-panel">
+        <div class="panel-title">Travel Time Configuration (Seconds)</div>
+        <table id="config-table">
+            <thead>
+                <tr>
+                    <th>From \ To</th>
+                    <th>POF-A</th>
+                    <th>POF-B</th>
+                    <th>MP1</th>
+                    <th>MP2</th>
+                    <th>MP3</th>
+                    <th>MP4</th>
+                    <th>W1</th>
+                    <th>HOME-P</th>
+                    <th>HOME-M</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <div style="margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 2rem; font-size: 0.875rem;">
+            <div>Pick/Place Duration: <input type="number" id="cfg-action-time" value="30"> s</div>
+            <div>POF Cycle Time: <input type="number" id="cfg-pof-time" value="600"> s</div>
+            <div>MP Cycle Time: <input type="number" id="cfg-mp-time" value="900"> s</div>
+        </div>
+    </div>
+
+    <div id="amr1" class="amr-icon amr1">1</div>
+    <div id="amr2" class="amr-icon amr2">2</div>
+
+    <script>
+        const state = {
+            isRunning: false,
+            speed: 1,
+            time: 0,
+            lastUpdate: Date.now(),
+            stations: {
+                'POF-A': { id: 'POF-A', type: 'POF', trolleyState: 2, isConsuming: true, progress: 0 },
+                'POF-B': { id: 'POF-B', type: 'POF', trolleyState: 2, isConsuming: false, progress: 0 },
+                'W1': { id: 'W1', type: 'WAITING', trolleyState: 2 },
+                'HOME-POF': { id: 'HOME-POF', type: 'HOME' },
+                'HOME-MP': { id: 'HOME-MP', type: 'HOME' },
+                'MP1': { id: 'MP1', type: 'MP', trolleyState: 0, isRefilling: false, progress: 0 },
+                'MP2': { id: 'MP2', type: 'MP', trolleyState: 2, isRefilling: false, progress: 0 },
+                'MP3': { id: 'MP3', type: 'MP', trolleyState: 2, isRefilling: false, progress: 0 },
+                'MP4': { id: 'MP4', type: 'MP', trolleyState: 2, isRefilling: false, progress: 0 }
+            },
+            amrs: {
+                'AMR1': { id: 1, location: 'HOME-POF', target: null, state: 'IDLE', carrying: null, timer: 0 },
+                'AMR2': { id: 2, location: 'W1', target: null, state: 'IDLE', carrying: 'FULL', timer: 0 }
+            },
+            config: {
+                actionTime: 30,
+                pofCycleTime: 600,
+                mpCycleTime: 900,
+                travelTimes: {
+                    'HOME-POF': { 'POF-A': 45, 'POF-B': 50 },
+                    'POF-A': { 'MP1': 100, 'MP2': 110, 'MP3': 120, 'MP4': 130, 'HOME-POF': 45 },
+                    'POF-B': { 'MP1': 105, 'MP2': 115, 'MP3': 125, 'MP4': 135, 'HOME-POF': 50 },
+                    'MP1': { 'W1': 60 }, 'MP2': { 'W1': 70 }, 'MP3': { 'W1': 80 }, 'MP4': { 'W1': 90 },
+                    'W1': { 'POF-A': 70, 'POF-B': 75 }
+                }
+            },
+            nextMPIndex: 0,
+            mpList: ['MP1', 'MP2', 'MP3', 'MP4'],
+            mpRefillQueue: [],
+            pofPickQueue: [], // Stations needing an EMPTY pick
+            pofPlaceQueue: [] // Stations needing a FULL drop
+        };
+
+        function initConfigTable() {
+            const tbody = document.querySelector('#config-table tbody');
+            const stations = ['POF-A', 'POF-B', 'MP1', 'MP2', 'MP3', 'MP4', 'W1', 'HOME-POF', 'HOME-MP'];
+            stations.forEach(from => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td style="font-weight: 600;">${from}</td>` + stations.map(to => {
+                    if (from === to) return `<td>-</td>`;
+                    const val = (state.config.travelTimes[from] && state.config.travelTimes[from][to]) || 60;
+                    if (!state.config.travelTimes[from]) state.config.travelTimes[from] = {};
+                    state.config.travelTimes[from][to] = val;
+                    return `<td><input type="number" data-from="${from}" data-to="${to}" value="${val}"></td>`;
+                }).join('');
+                tbody.appendChild(tr);
+            });
+            tbody.querySelectorAll('input').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    const { from, to } = e.target.dataset;
+                    state.config.travelTimes[from][to] = parseInt(e.target.value);
+                });
+            });
+        }
+
+        function formatTime(s) {
+            const h = Math.floor(s / 3600);
+            const m = Math.floor((s % 3600) / 60);
+            const sec = Math.floor(s % 60);
+            return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+        }
+
+        function updateUI() {
+            document.getElementById('sim-time').textContent = formatTime(state.time);
+
+            for (const [id, station] of Object.entries(state.stations)) {
+                const el = document.getElementById(`station-${id}`);
+                if (!el) continue;
+
+                const box = el.querySelector('.station-box');
+                const trolley = el.querySelector('.trolley');
+                const badge = el.querySelector('.status-badge');
+                const indicator = el.querySelector('.indicator');
+                const progress = el.querySelector('.progress-bar');
+                const fill = el.querySelector('.progress-fill');
+
+                if (station.trolleyState > 0) {
+                    box.classList.add('has-trolley');
+                    if (trolley) {
+                        trolley.classList.remove('hidden');
+                        trolley.className = 'trolley ' + (station.trolleyState === 1 ? 'empty' : 'full');
+                    }
+                    if (badge) {
+                        badge.classList.remove('hidden');
+                        badge.textContent = station.trolleyState;
+                    }
+                } else {
+                    box.classList.remove('has-trolley');
+                    if (trolley) trolley.classList.add('hidden');
+                    if (badge) badge.classList.add('hidden');
+                }
+
+                if (indicator) {
+                    indicator.className = 'indicator ' +
+                        (station.isConsuming ? 'consuming' : '') +
+                        (station.isRefilling ? 'refilling' : '');
+                }
+
+                if (progress) {
+                    const isActive = station.isConsuming || station.isRefilling;
+                    progress.style.display = isActive ? 'block' : 'none';
+                    if (fill) fill.style.width = (station.progress || 0) + '%';
+                }
+            }
+
+            for (const [id, amr] of Object.entries(state.amrs)) {
+                const el = document.getElementById(id.toLowerCase());
+                const statusCard = document.getElementById(`status-${id.toLowerCase()}`);
+                const stationEl = document.getElementById(`station-${amr.location}`);
+
+                if (stationEl && el) {
+                    const boxRect = stationEl.querySelector('.station-box').getBoundingClientRect();
+                    const scrollX = window.scrollX;
+                    const scrollY = window.scrollY;
+                    el.style.left = (boxRect.left + scrollX + boxRect.width / 2 - 25) + 'px';
+                    el.style.top = (boxRect.top + scrollY + boxRect.height / 2 - 25) + 'px';
+                }
+
+                if (statusCard) {
+                    statusCard.querySelector('.amr-location').textContent = amr.location + (amr.target ? ` → ${amr.target}` : '');
+                    statusCard.querySelectorAll('.amr-state-text')[0].textContent = amr.state + (amr.timer > 0 ? ` (${Math.ceil(amr.timer)}s)` : '');
+                    statusCard.querySelector('.carrying').textContent = `Carrying: ${amr.carrying || 'None'}`;
+                }
+            }
+        }
+
+        function tick() {
+            const now = Date.now();
+            const dt = ((now - state.lastUpdate) / 1000) * (state.isRunning ? state.speed : 0);
+            state.lastUpdate = now;
+            state.time += dt;
+
+            // 1. POF Logic
+            ['POF-A', 'POF-B'].forEach((id) => {
+                const s = state.stations[id];
+                if (s.isConsuming && s.trolleyState === 2) {
+                    s.progress += (dt / state.config.pofCycleTime) * 100;
+                    if (s.progress >= 100) {
+                        s.progress = 0;
+                        s.trolleyState = 1; // Consumption complete, now empty
+                        s.isConsuming = false;
+                        if (!state.pofPickQueue.includes(id)) state.pofPickQueue.push(id);
+
+                        // Pass consumption to other POF if it has a full trolley
+                        const otherId = id === 'POF-A' ? 'POF-B' : 'POF-A';
+                        if (state.stations[otherId].trolleyState === 2) {
+                            state.stations[otherId].isConsuming = true;
+                        }
+                    }
+                }
+            });
+
+            // 2. MP Refilling Logic
+            const activeRefill = Object.values(state.stations).find(s => s.isRefilling);
+            if (!activeRefill && state.mpRefillQueue.length > 0) {
+                const nextId = state.mpRefillQueue.shift();
+                state.stations[nextId].isRefilling = true;
+            }
+
+            Object.entries(state.stations).forEach(([id, s]) => {
+                if (s.type === 'MP' && s.isRefilling) {
+                    s.progress += (dt / state.config.mpCycleTime) * 100;
+                    if (s.progress >= 100) {
+                        s.progress = 0;
+                        s.trolleyState = 2; // Refill complete, now full
+                        s.isRefilling = false;
+                    }
+                }
+            });
+
+            // 3. AMR Logic
+            Object.entries(state.amrs).forEach(([id, amr]) => {
+                if (amr.timer > 0) {
+                    amr.timer -= dt;
+                    if (amr.timer <= 0) {
+                        amr.timer = 0;
+                        onTimerComplete(amr);
+                    }
+                    return;
+                }
+                if (amr.state === 'IDLE') checkNextTask(amr);
+            });
+
+            updateUI();
+            requestAnimationFrame(tick);
+        }
+
+        function checkNextTask(amr) {
+            const currentStation = state.stations[amr.location];
+
+            // Logic based on current location and carriage status
+            switch (currentStation.type) {
+                case 'POF':
+                    if (amr.carrying === 'EMPTY') {
+                        // We just picked up an empty trolley from POF. 
+                        // Target is the next available MP station to drop it off.
+                        const targetMP = state.mpList[state.nextMPIndex];
+                        startMovement(amr, targetMP, () => {
+                            amr.state = 'PLACING';
+                            amr.timer = state.config.actionTime;
+                        });
+                        state.nextMPIndex = (state.nextMPIndex + 1) % state.mpList.length;
+                    } else {
+                        // We just placed a FULL trolley (carrying is null).
+                        // Check if there are more empties to pick up at POFs, otherwise go home.
+                        // if (state.pofPickQueue.length > 0) {
+                        //     const nextPick = state.pofPickQueue.shift();
+                        //     startMovement(amr, nextPick, () => {
+                        //         amr.state = 'PICKING';
+                        //         amr.timer = state.config.actionTime;
+                        //     });
+                        // } else {
+                        startMovement(amr, 'HOME-POF', () => { amr.state = 'IDLE'; });
+                        // }
+                    }
+                    break;
+
+                case 'MP':
+                    if (amr.carrying === 'FULL') {
+                        // We just picked up a full trolley from MP.
+                        // Priority 1: Delivery to an empty POF.
+                        // Priority 2: Delivery to Waiting Area (W1).
+                        // const emptyPOF = ['POF-A', 'POF-B'].find(p => state.stations[p].trolleyState === 0);
+                        // if (emptyPOF) {
+                        //     startMovement(amr, emptyPOF, () => {
+                        //         amr.state = 'PLACING';
+                        //         amr.timer = state.config.actionTime;
+                        //     });
+                        // } else {
+                        startMovement(amr, 'W1', () => {
+                            amr.state = 'PLACING';
+                            amr.timer = 5;
+                            // amr.timer = state.config.actionTime;
+                        });
+                        // }
+                    } else {
+                        // We just placed an EMPTY trolley (carrying is null).
+                        // Look for full trolleys to pick up in MP area.
+                        const nextFullMP = state.mpList.find(m => state.stations[m].trolleyState === 2);
+                        if (nextFullMP) {
+                            startMovement(amr, nextFullMP, () => {
+                                amr.state = 'PICKING';
+                                amr.timer = state.config.actionTime;
+                            });
+                        } else {
+                            startMovement(amr, 'HOME-MP', () => {
+                                amr.state = 'IDLE';
+                                amr.timer = 5;
+                            });
+                        }
+                    }
+                    break;
+
+                case 'WAITING':
+                    if (amr.carrying === 'FULL') {
+                        // We are waiting at W1 or just picked up from W1.
+                        // Wait for a POF to become available.
+                        const emptyPOF = ['POF-A', 'POF-B'].find(p => state.stations[p].trolleyState === 0);
+                        if (emptyPOF) {
+                            state.stations['W1'].trolleyState = 0;
+                            startMovement(amr, emptyPOF, () => {
+                                amr.state = 'PLACING';
+                                amr.timer = state.config.actionTime;
+                            });
+                        } else {
+                            // Still blocked, stay IDLE at W1
+                            amr.state = 'IDLE';
+                            amr.timer = 5;
+                        }
+                    } else {
+                        // Just dropped off? Check MP for tasks.
+                        // const fullMP = state.mpList.find(m => state.stations[m].trolleyState === 2);
+                        // if (fullMP) {
+                        //     startMovement(amr, fullMP, () => {
+                        //         amr.state = 'PICKING';
+                        //         amr.timer = state.config.actionTime;
+                        //     });
+                        // } else {
+                        //     startMovement(amr, 'HOME-MP', () => { amr.state = 'IDLE'; });
+                        // }
+                        console.log(`wrong condition at state WAITING with amr.arrying: ${amr.carrying}`);
+                        amr.timer = 60;
+                    }
+                    break;
+
+                case 'HOME':
+                default:
+                    // Dispatch from Home
+                    if (state.pofPickQueue.length > 0) {
+                        const target = state.pofPickQueue.shift();
+                        startMovement(amr, target, () => {
+                            amr.state = 'PICKING';
+                            amr.timer = state.config.actionTime;
+                        });
+                    } else {
+                        amr.timer = 5;
+                    }
+                    break;
+            }
+        }
+
+        function startMovement(amr, target, callback) {
+            if (amr.location === target) { callback(); return; }
+            amr.state = 'MOVING';
+            amr.target = target;
+            let time = 60;
+            if (state.config.travelTimes[amr.location] && state.config.travelTimes[amr.location][target]) {
+                time = state.config.travelTimes[amr.location][target];
+            } else if (state.config.travelTimes[target] && state.config.travelTimes[target][amr.location]) {
+                time = state.config.travelTimes[target][amr.location];
+            }
+            amr.timer = time;
+            amr.onArrival = callback;
+        }
+
+        function onTimerComplete(amr) {
+            if (amr.state === 'MOVING') {
+                amr.location = amr.target;
+                amr.target = null;
+                amr.state = 'IDLE';
+                if (amr.onArrival) {
+                    const cb = amr.onArrival;
+                    amr.onArrival = null;
+                    cb();
+                }
+            } else if (amr.state === 'PICKING') {
+                const s = state.stations[amr.location];
+                if (s.trolleyState > 0) {
+                    amr.carrying = (s.trolleyState === 1) ? 'EMPTY' : 'FULL';
+                    s.trolleyState = 0;
+
+                }
+                amr.state = 'IDLE';
+            } else if (amr.state === 'PLACING') {
+                const s = state.stations[amr.location];
+                if (amr.carrying === 'EMPTY') {
+                    amr.carrying = null;
+                    s.trolleyState = 1;
+                    if (s.type === 'MP') state.mpRefillQueue.push(amr.location);
+                } else if (amr.carrying === 'FULL') {
+                    if (s.type === 'WAITING') {
+                        s.trolleyState = 2;
+                    } else {
+                        amr.carrying = null;
+                        s.trolleyState = 2;
+                        // Auto-start consumption if nothing else is consuming
+                        if (!state.stations['POF-A'].isConsuming && !state.stations['POF-B'].isConsuming) {
+                            s.isConsuming = true;
+                        }
+                    }
+                }
+                amr.state = 'IDLE';
+            }
+        }
+
+        // --- Initialization ---
+
+        window.onload = () => {
+            initConfigTable();
+
+            document.getElementById('btn-play').onclick = () => {
+                state.isRunning = true;
+                document.getElementById('btn-play').classList.add('active');
+                document.getElementById('btn-pause').classList.remove('active');
+            };
+
+            document.getElementById('btn-pause').onclick = () => {
+                state.isRunning = false;
+                document.getElementById('btn-pause').classList.add('active');
+                document.getElementById('btn-play').classList.remove('active');
+            };
+
+            document.querySelectorAll('.btn-speed').forEach(btn => {
+                btn.onclick = () => {
+                    state.speed = parseInt(btn.dataset.speed);
+                    document.querySelectorAll('.btn-speed').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                };
+            });
+
+            document.getElementById('cfg-action-time').onchange = (e) => state.config.actionTime = parseInt(e.target.value);
+            document.getElementById('cfg-pof-time').onchange = (e) => state.config.pofCycleTime = parseInt(e.target.value);
+            document.getElementById('cfg-mp-time').onchange = (e) => state.config.mpCycleTime = parseInt(e.target.value);
+
+            document.querySelector('.btn-speed[data-speed="1"]').classList.add('active');
+
+            requestAnimationFrame(tick);
+            window.addEventListener('resize', updateUI);
+            setTimeout(updateUI, 100);
+        };
+    </script>
+</body>
+
+</html>
