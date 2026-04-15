@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMR Simulation Configuration</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=JetBrains+Mono:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header>
+        <h1>Simulation Settings</h1>
+        <div class="controls">
+            <a href="index.html" class="nav-link"><span>←</span> Back to Dashboard</a>
+        </div>
+    </header>
+
+    <div class="main-grid">
+        <div class="panel config-panel">
+            <div class="panel-title">Travel Time Configuration (Seconds)</div>
+            <table id="config-table">
+                <thead>
+                    <tr>
+                        <th>From \ To</th>
+                        <th>POF-A</th>
+                        <th>POF-B</th>
+                        <th>MP1</th>
+                        <th>MP2</th>
+                        <th>MP3</th>
+                        <th>MP4</th>
+                        <th>W1</th>
+                        <th>HOME-P</th>
+                        <th>HOME-M</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <div style="margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 2rem; font-size: 0.875rem;">
+                <div>Pick/Place Duration: <input type="number" id="cfg-action-time" value="30"> s</div>
+                <div>POF Cycle Time: <input type="number" id="cfg-pof-time" value="600"> s</div>
+                <div>MP Cycle Time: <input type="number" id="cfg-mp-time" value="900"> s</div>
+            </div>
+            <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
+                <button id="btn-reset" style="background: var(--danger);">Reset to Defaults</button>
+                <button id="btn-save" class="active">Save Configuration</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DEFAULTS = {
+            actionTime: 30,
+            pofCycleTime: 600,
+            mpCycleTime: 420,//7 min
+            travelTimes: {
+                'HOME-POF': { 'POF-A': 45, 'POF-B': 50 },
+                'POF-A': { 'MP1': 100, 'MP2': 110, 'MP3': 120, 'MP4': 130, 'HOME-POF': 45 },
+                'POF-B': { 'MP1': 105, 'MP2': 115, 'MP3': 125, 'MP4': 135, 'HOME-POF': 50 },
+                'MP1': { 'W1': 60 }, 'MP2': { 'W1': 70 }, 'MP3': { 'W1': 80 }, 'MP4': { 'W1': 90 },
+                'W1': { 'POF-A': 70, 'POF-B': 75 }
+            }
+        };
+
+        let config = JSON.parse(localStorage.getItem('amr_sim_config')) || JSON.parse(JSON.stringify(DEFAULTS));
+
+        function initConfigTable() {
+            const tbody = document.querySelector('#config-table tbody');
+            const stations = ['POF-A', 'POF-B', 'MP1', 'MP2', 'MP3', 'MP4', 'W1', 'HOME-POF', 'HOME-MP'];
+            tbody.innerHTML = '';
+            stations.forEach(from => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td style="font-weight: 600;">${from}</td>` + stations.map(to => {
+                    if (from === to) return `<td>-</td>`;
+                    const val = (config.travelTimes[from] && config.travelTimes[from][to]) || 60;
+                    if (!config.travelTimes[from]) config.travelTimes[from] = {};
+                    config.travelTimes[from][to] = val;
+                    return `<td><input type="number" data-from="${from}" data-to="${to}" value="${val}"></td>`;
+                }).join('');
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('cfg-action-time').value = config.actionTime;
+            document.getElementById('cfg-pof-time').value = config.pofCycleTime;
+            document.getElementById('cfg-mp-time').value = config.mpCycleTime;
+        }
+
+        function saveConfig() {
+            const inputs = document.querySelectorAll('#config-table input');
+            inputs.forEach(input => {
+                const { from, to } = input.dataset;
+                if (!config.travelTimes[from]) config.travelTimes[from] = {};
+                config.travelTimes[from][to] = parseInt(input.value);
+            });
+
+            config.actionTime = parseInt(document.getElementById('cfg-action-time').value);
+            config.pofCycleTime = parseInt(document.getElementById('cfg-pof-time').value);
+            config.mpCycleTime = parseInt(document.getElementById('cfg-mp-time').value);
+
+            localStorage.setItem('amr_sim_config', JSON.stringify(config));
+            alert('Configuration saved successfully!');
+        }
+
+        function resetDefaults() {
+            if (confirm('Are you sure you want to reset all settings to defaults?')) {
+                config = JSON.parse(JSON.stringify(DEFAULTS));
+                initConfigTable();
+                localStorage.setItem('amr_sim_config', JSON.stringify(config));
+            }
+        }
+
+        window.onload = () => {
+            initConfigTable();
+            document.getElementById('btn-save').onclick = saveConfig;
+            document.getElementById('btn-reset').onclick = resetDefaults;
+        };
+    </script>
+</body>
+
+</html>

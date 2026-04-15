@@ -10,442 +10,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=JetBrains+Mono:wght@400;600&display=swap"
         rel="stylesheet">
-    <style>
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.7);
-            --accent-blue: #38bdf8;
-            --accent-purple: #818cf8;
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --border: rgba(255, 255, 255, 0.1);
-            --trolley-empty: #64748b;
-            --trolley-full: #38bdf8;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-        }
-
-        body {
-            font-family: 'Outfit', sans-serif;
-            background: var(--bg-color);
-            background-image:
-                radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
-                radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%),
-                radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%);
-            color: var(--text-primary);
-            min-height: 100vh;
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-            overflow-x: hidden;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            backdrop-filter: blur(10px);
-            background: var(--card-bg);
-            padding: 1.5rem 2rem;
-            border-radius: 1.5rem;
-            border: 1px solid var(--border);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            letter-spacing: -0.02em;
-            background: linear-gradient(90deg, #38bdf8, #818cf8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .controls {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        button {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 0.75rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: inherit;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        button:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-2px);
-        }
-
-        button.active {
-            background: var(--accent-blue);
-            border-color: var(--accent-blue);
-            color: var(--bg-color);
-            font-weight: 600;
-        }
-
-        .main-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 2rem;
-        }
-
-        .panel {
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border);
-            border-radius: 1.5rem;
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        .panel-title {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
-        .station-grid {
-            display: flex;
-            gap: 1.5rem;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .station-container {
-            position: relative;
-            width: 100px;
-            height: 120px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .station-box {
-            width: 80px;
-            height: 80px;
-            border: 2px dashed var(--border);
-            border-radius: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            transition: all 0.3s;
-        }
-
-        .station-box.has-trolley {
-            border-style: solid;
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        .trolley {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-            position: relative;
-        }
-
-        .trolley.empty {
-            background: var(--trolley-empty);
-        }
-
-        .trolley.full {
-            background: var(--trolley-full);
-        }
-
-        .status-badge {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background: #1e293b;
-            border: 1px solid var(--border);
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-            font-family: 'JetBrains Mono', monospace;
-            z-index: 5;
-        }
-
-        .indicator {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 1rem;
-            border: 2px solid transparent;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .indicator.consuming {
-            border-color: var(--warning);
-            animation: pulse-ring 2s infinite;
-        }
-
-        .indicator.refilling {
-            border-color: var(--accent-purple);
-            animation: pulse-ring 2s infinite;
-        }
-
-        @keyframes pulse-ring {
-            0% {
-                transform: scale(0.95);
-                opacity: 0.7;
-            }
-
-            50% {
-                transform: scale(1.1);
-                opacity: 0.3;
-            }
-
-            100% {
-                transform: scale(0.95);
-                opacity: 0.7;
-            }
-        }
-
-        .progress-bar {
-            position: absolute;
-            bottom: -5px;
-            left: 10%;
-            width: 80%;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-            overflow: hidden;
-            display: none;
-            z-index: 2;
-        }
-
-        .progress-fill {
-            height: 100%;
-            width: 0%;
-            background: var(--accent-blue);
-            transition: width 0.1s linear;
-        }
-
-        .amr-icon {
-            position: absolute;
-            width: 50px;
-            height: 50px;
-            background: var(--text-primary);
-            color: var(--bg-color);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 800;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
-            z-index: 100;
-            transition: all 0.5s ease-in-out;
-            pointer-events: none;
-        }
-
-        .amr-icon.amr1 {
-            background: var(--accent-blue);
-        }
-
-        .amr-icon.amr2 {
-            background: var(--accent-purple);
-        }
-
-        .market-place {
-            grid-column: span 3;
-        }
-
-        .status-panel {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-        }
-
-        .amr-status-card {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 1rem;
-            padding: 1rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .amr-status-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .amr-name {
-            font-weight: 600;
-            font-size: 1.125rem;
-        }
-
-        .amr-location {
-            font-family: 'JetBrains Mono', monospace;
-            color: var(--accent-blue);
-            font-size: 0.875rem;
-        }
-
-        .amr-state-text {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-        }
-
-        .config-panel {
-            grid-column: span 3;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.875rem;
-        }
-
-        th,
-        td {
-            text-align: left;
-            padding: 0.75rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        th {
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
-        input {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border);
-            color: white;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.25rem;
-            width: 60px;
-            font-family: inherit;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        #transition-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 50;
-        }
-
-        .transition-path {
-            stroke: var(--accent-blue);
-            stroke-width: 3;
-            stroke-dasharray: 10, 10;
-            fill: none;
-            animation: march 1s linear infinite, blink 1.5s ease-in-out infinite;
-        }
-
-        @keyframes march {
-            from {
-                stroke-dashoffset: 20;
-            }
-
-            to {
-                stroke-dashoffset: 0;
-            }
-        }
-
-        @keyframes blink {
-
-            0%,
-            100% {
-                opacity: 0.3;
-            }
-
-            50% {
-                opacity: 0.9;
-            }
-        }
-
-        .transition-label-bg {
-            fill: var(--bg-color);
-            stroke: var(--accent-blue);
-            stroke-width: 1;
-        }
-
-        .transition-label-text {
-            fill: var(--accent-blue);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            font-weight: bold;
-            text-anchor: middle;
-            dominant-baseline: middle;
-        }
-
-        .transition-label-bg.amr1 {
-            fill: var(--accent-blue);
-            stroke: white;
-        }
-
-        .transition-label-bg.amr2 {
-            fill: var(--accent-purple);
-            stroke: white;
-        }
-
-        .transition-label-text.amr-dark {
-            fill: var(--bg-color);
-        }
-
-        @media (max-width: 1024px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .market-place {
-                grid-column: span 1;
-            }
-
-            .config-panel {
-                grid-column: span 1;
-            }
-
-            .status-panel {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -462,6 +27,8 @@
             <button class="btn-speed" data-speed="5">5x</button>
             <button class="btn-speed" data-speed="10">10x</button>
             <button class="btn-speed" data-speed="100">100x</button>
+            <div style="width: 1px; height: 24px; background: var(--border); margin: 0 1rem;"></div>
+            <a href="config.html" class="nav-link"><span>⚙</span> Settings</a>
         </div>
     </header>
 
@@ -591,29 +158,24 @@
         </div>
     </div>
 
-    <div class="panel config-panel">
-        <div class="panel-title">Travel Time Configuration (Seconds)</div>
-        <table id="config-table">
-            <thead>
-                <tr>
-                    <th>From \ To</th>
-                    <th>POF-A</th>
-                    <th>POF-B</th>
-                    <th>MP1</th>
-                    <th>MP2</th>
-                    <th>MP3</th>
-                    <th>MP4</th>
-                    <th>W1</th>
-                    <th>HOME-P</th>
-                    <th>HOME-M</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-        <div style="margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 2rem; font-size: 0.875rem;">
-            <div>Pick/Place Duration: <input type="number" id="cfg-action-time" value="30"> s</div>
-            <div>POF Cycle Time: <input type="number" id="cfg-pof-time" value="600"> s</div>
-            <div>MP Cycle Time: <input type="number" id="cfg-mp-time" value="900"> s</div>
+    <div class="panel graph-panel">
+        <div class="panel-title">POF Trolley State History (Interactive Graph)</div>
+        <canvas id="state-graph"></canvas>
+        <div
+            style="font-size: 0.75rem; color: var(--text-secondary); display: flex; gap: 2rem; justify-content: space-between; align-items: center;">
+            <div style="display: flex; gap: 2rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div style="width: 12px; height: 12px; background: #38bdf8; border-radius: 2px;"></div> POF-A State
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div style="width: 12px; height: 12px; background: #ef4444; border-radius: 2px;"></div> POF-B State (Dashed)
+                </div>
+                <div>[Scroll to zoom • Drag to pan • Double-click to reset]</div>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button id="btn-export-csv" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;">Export CSV</button>
+                <button id="btn-export-img" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;">Save Image</button>
+            </div>
         </div>
     </div>
 
@@ -621,6 +183,9 @@
         <defs>
             <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
                 <polygon points="0 0, 10 3.5, 0 7" fill="var(--accent-blue)" />
+            </marker>
+            <marker id="arrowhead-red" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444" />
             </marker>
         </defs>
     </svg>
@@ -649,7 +214,7 @@
                 'AMR1': { id: 1, location: 'HOME-POF', target: null, state: 'IDLE', carrying: null, timer: 0 },
                 'AMR2': { id: 2, location: 'W1', target: null, state: 'IDLE', carrying: 'FULL', timer: 0 }
             },
-            config: {
+            config: JSON.parse(localStorage.getItem('amr_sim_config')) || {
                 actionTime: 30,
                 pofCycleTime: 600,
                 mpCycleTime: 900,
@@ -661,6 +226,8 @@
                     'W1': { 'POF-A': 70, 'POF-B': 75 }
                 }
             },
+            history: [],
+            lastDataCapture: 0,
             nextMPIndex: 0,
             mpList: ['MP1', 'MP2', 'MP3', 'MP4'],
             mpRefillQueue: [],
@@ -668,27 +235,239 @@
             pofPlaceQueue: [] // Stations needing a FULL drop
         };
 
-        function initConfigTable() {
-            const tbody = document.querySelector('#config-table tbody');
-            const stations = ['POF-A', 'POF-B', 'MP1', 'MP2', 'MP3', 'MP4', 'W1', 'HOME-POF', 'HOME-MP'];
-            stations.forEach(from => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td style="font-weight: 600;">${from}</td>` + stations.map(to => {
-                    if (from === to) return `<td>-</td>`;
-                    const val = (state.config.travelTimes[from] && state.config.travelTimes[from][to]) || 60;
-                    if (!state.config.travelTimes[from]) state.config.travelTimes[from] = {};
-                    state.config.travelTimes[from][to] = val;
-                    return `<td><input type="number" data-from="${from}" data-to="${to}" value="${val}"></td>`;
-                }).join('');
-                tbody.appendChild(tr);
-            });
-            tbody.querySelectorAll('input').forEach(input => {
-                input.addEventListener('change', (e) => {
-                    const { from, to } = e.target.dataset;
-                    state.config.travelTimes[from][to] = parseInt(e.target.value);
+        class GraphManager {
+            constructor(canvasId) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.zoom = 1;
+                this.offset = 0;
+                this.isDragging = false;
+                this.lastMouseX = 0;
+                this.padding = { top: 30, right: 30, bottom: 40, left: 50 };
+
+                this.setupEvents();
+                this.resize();
+            }
+
+            resize() {
+                const rect = this.canvas.getBoundingClientRect();
+                this.canvas.width = rect.width * window.devicePixelRatio;
+                this.canvas.height = rect.height * window.devicePixelRatio;
+                this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            }
+
+            setupEvents() {
+                this.canvas.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    const zoomSpeed = 0.1;
+                    const delta = e.deltaY > 0 ? 1 - zoomSpeed : 1 + zoomSpeed;
+                    this.zoom *= delta;
+                    this.zoom = Math.max(0.001, Math.min(this.zoom, 50));
                 });
-            });
+
+                this.canvas.addEventListener('mousedown', (e) => {
+                    this.isDragging = true;
+                    this.lastMouseX = e.clientX;
+                });
+
+                window.addEventListener('mousemove', (e) => {
+                    if (this.isDragging) {
+                        const dx = e.clientX - this.lastMouseX;
+                        this.offset += dx / this.zoom;
+                        this.lastMouseX = e.clientX;
+                    }
+                });
+
+                window.addEventListener('mouseup', () => this.isDragging = false);
+
+                this.canvas.addEventListener('dblclick', () => {
+                    this.zoom = 1;
+                    this.offset = 0;
+                });
+            }
+
+            draw(history, currentTime, isRunning, options = {}) {
+                if (!history.length) return;
+                const { width, height } = this.canvas.getBoundingClientRect();
+                const ctx = options.ctx || this.ctx;
+                const isLight = options.theme === 'light';
+
+                const chartWidth = width - this.padding.left - this.padding.right;
+                const chartHeight = height - this.padding.top - this.padding.bottom;
+                const timeWindow = 300; // Default view window in seconds
+                const pixelsPerSecond = (chartWidth / timeWindow) * this.zoom;
+                const visibleTimeRange = chartWidth / pixelsPerSecond;
+
+                // Auto-fit logic
+                if (isRunning && !options.ctx) {
+                    if (currentTime <= visibleTimeRange) {
+                        this.offset = 0;
+                    } else {
+                        this.offset = visibleTimeRange - currentTime;
+                    }
+                }
+
+                if (isLight) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, width, height);
+                } else {
+                    ctx.clearRect(0, 0, width, height);
+                }
+
+                // Color Configuration
+                const axisColor = isLight ? 'rgba(0,0,0,0.8)' : 'rgba(255, 255, 255, 0.2)';
+                const gridColor = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255, 255, 255, 0.1)';
+                const textColor = isLight ? '#000000' : 'rgba(255, 255, 255, 0.5)';
+
+                // Draw Axes
+                ctx.strokeStyle = axisColor;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(this.padding.left, this.padding.top);
+                ctx.lineTo(this.padding.left, height - this.padding.bottom);
+                ctx.lineTo(width - this.padding.right, height - this.padding.bottom);
+                ctx.stroke();
+
+                // Draw Y-Axis Grid & Labels
+                ctx.fillStyle = textColor;
+                ctx.font = '10px JetBrains Mono';
+                ctx.textAlign = 'right';
+                const yLabels = ['No', 'Empty', 'Full'];
+                for (let i = 0; i <= 2; i++) {
+                    const y = height - this.padding.bottom - (i / 2) * chartHeight;
+                    ctx.fillText(yLabels[i], this.padding.left - 10, y + 4);
+                    ctx.beginPath();
+                    ctx.strokeStyle = gridColor;
+                    ctx.setLineDash([5, 5]);
+                    ctx.moveTo(this.padding.left, y);
+                    ctx.lineTo(width - this.padding.right, y);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+
+                // Draw X-Axis Time Labels
+                ctx.fillStyle = textColor;
+                ctx.strokeStyle = axisColor;
+                ctx.textAlign = 'center';
+                const startTime = -this.offset;
+                const endTime = startTime + (chartWidth / pixelsPerSecond);
+                const timeStep = Math.max(1, Math.pow(10, Math.floor(Math.log10(50 / this.zoom))) * 5); // Adaptive tick frequency
+
+                const firstTick = Math.ceil(startTime / timeStep) * timeStep;
+                for (let t = firstTick; t <= endTime; t += timeStep) {
+                    const x = this.padding.left + (t + this.offset) * pixelsPerSecond;
+                    if (x < this.padding.left || x > width - this.padding.right) continue;
+
+                    ctx.fillText(formatTime(t), x, height - 10);
+                    ctx.beginPath();
+                    ctx.moveTo(x, height - this.padding.bottom);
+                    ctx.lineTo(x, height - this.padding.bottom + 5);
+                    ctx.stroke();
+                }
+
+                // Draw Lines
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(this.padding.left, 0, chartWidth, height - this.padding.bottom);
+                ctx.clip();
+
+                const getX = (t) => this.padding.left + (t + this.offset) * pixelsPerSecond;
+                const getY = (s) => height - this.padding.bottom - (s / 2) * chartHeight;
+
+                // Only draw points that are visible (plus some margin)
+                const visibleHistory = history.filter(d => {
+                    const x = getX(d.t);
+                    return x >= this.padding.left - 50 && x <= width - this.padding.right + 50;
+                });
+
+                if (visibleHistory.length > 0) {
+                    // Draw POF-A (Cyan)
+                    ctx.strokeStyle = '#38bdf8';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    visibleHistory.forEach((d, i) => {
+                        const x = getX(d.t);
+                        const y = getY(d.pofA);
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    });
+                    ctx.stroke();
+
+                    // Draw POF-B (Red - Dashed)
+                    ctx.strokeStyle = '#ef4444';
+                    ctx.setLineDash([5, 5]);
+                    ctx.beginPath();
+                    visibleHistory.forEach((d, i) => {
+                        const x = getX(d.t);
+                        const y = getY(d.pofB);
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    });
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+
+                // Draw Legend
+                const legendX = width - this.padding.right - 80;
+                const legendY = this.padding.top + 10;
+                ctx.textAlign = 'left';
+                ctx.font = '10px JetBrains Mono';
+                
+                // Legend Item 1 (POF-A)
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(legendX, legendY); ctx.lineTo(legendX + 20, legendY); ctx.stroke();
+                ctx.fillStyle = textColor;
+                ctx.fillText('POF-A', legendX + 25, legendY + 3);
+
+                // Legend Item 2 (POF-B)
+                ctx.strokeStyle = '#ef4444';
+                ctx.setLineDash([3, 3]);
+                ctx.beginPath(); ctx.moveTo(legendX, legendY + 15); ctx.lineTo(legendX + 20, legendY + 15); ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.fillText('POF-B', legendX + 25, legendY + 18);
+
+                ctx.restore();
+            }
         }
+
+        function exportCSV() {
+            if (!state.history.length) return alert('No data to export.');
+            let csv = 'Time (s),POF-A State,POF-B State\n';
+            state.history.forEach(d => {
+                csv += `${d.t.toFixed(2)},${d.pofA},${d.pofB}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `amr_sim_data_${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.csv`);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function exportImage() {
+            if (!state.history.length) return alert('No data to export.');
+            const canvas = document.getElementById('state-graph');
+            const offscreen = document.createElement('canvas');
+            const rect = canvas.getBoundingClientRect();
+            offscreen.width = rect.width * window.devicePixelRatio;
+            offscreen.height = rect.height * window.devicePixelRatio;
+            const ctx = offscreen.getContext('2d');
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+            // Draw with light theme on white background
+            graphManager.draw(state.history, state.time, state.isRunning, { ctx, theme: 'light' });
+
+            const link = document.createElement('a');
+            link.download = `amr_sim_graph_${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.png`;
+            link.href = offscreen.toDataURL('image/png');
+            link.click();
+        }
+
+        let graphManager;
 
         function formatTime(s) {
             const h = Math.floor(s / 3600);
@@ -794,7 +573,9 @@
                         (fType === 'WAITING' && tType === 'POF') ||
                         (fType === 'POF' && tType === 'HOME') ||
                         (fType === 'POF' && tType === 'MP') ||
-                        (fType === 'MP' && tType === 'MP');
+                        (fType === 'MP' && tType === 'MP') ||
+                        (fType === 'HOME' && tType === 'MP') ||
+                        (fType === 'MP' && tType === 'HOME');
 
                     if (!isValidTransition) continue;
 
@@ -820,8 +601,8 @@
                         // Draw path
                         const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
                         path.setAttribute("d", `M ${x1} ${y1} L ${x2} ${y2}`);
-                        path.setAttribute("class", "transition-path");
-                        path.setAttribute("marker-end", "url(#arrowhead)");
+                        path.setAttribute("class", `transition-path amr${amr.id}`);
+                        path.setAttribute("marker-end", amr.id === 2 ? "url(#arrowhead-red)" : "url(#arrowhead)");
                         svg.appendChild(path);
 
                         // Draw moving label/icon
@@ -906,7 +687,20 @@
                 if (amr.state === 'IDLE') checkNextTask(amr);
             });
 
+            // Data collection for graph (every 1 second of simulation time)
+            if (state.isRunning && state.time - state.lastDataCapture >= 1) {
+                state.lastDataCapture = state.time;
+                state.history.push({
+                    t: state.time,
+                    pofA: state.stations['POF-A'].trolleyState,
+                    pofB: state.stations['POF-B'].trolleyState
+                });
+                // Keep history for 1 full day (86,400 seconds)
+                if (state.history.length > 86400) state.history.shift();
+            }
+
             updateUI();
+            if (graphManager) graphManager.draw(state.history, state.time, state.isRunning);
             requestAnimationFrame(tick);
         }
 
@@ -955,7 +749,6 @@
                         startMovement(amr, 'W1', () => {
                             amr.state = 'PLACING';
                             amr.timer = 5;
-                            // amr.timer = state.config.actionTime;
                         });
                         // }
                     } else {
@@ -1011,14 +804,27 @@
                 case 'HOME':
                 default:
                     // Dispatch from Home
-                    if (state.pofPickQueue.length > 0) {
-                        const target = state.pofPickQueue.shift();
-                        startMovement(amr, target, () => {
-                            amr.state = 'PICKING';
-                            amr.timer = state.config.actionTime;
-                        });
+                    if (amr.location === 'HOME-POF') {
+                        if (state.pofPickQueue.length > 0) {
+                            const target = state.pofPickQueue.shift();
+                            startMovement(amr, target, () => {
+                                amr.state = 'PICKING';
+                                amr.timer = state.config.actionTime;
+                            });
+                        } else {
+                            amr.timer = 5;
+                        }
                     } else {
-                        amr.timer = 5;
+                        const nextFullMP = state.mpList[state.nextMPIndex];  //state.mpList.find(m => state.stations[m].trolleyState === 2);
+                        if (state.stations[nextFullMP].trolleyState === 2) {
+                            startMovement(amr, nextFullMP, () => {
+                                amr.state = 'PICKING';
+                                amr.timer = state.config.actionTime;
+                            });
+                        } else {
+                            amr.state = 'IDLE';
+                            amr.timer = 5;
+                        }
                     }
                     break;
             }
@@ -1082,7 +888,7 @@
         // --- Initialization ---
 
         window.onload = () => {
-            initConfigTable();
+            graphManager = new GraphManager('state-graph');
 
             document.getElementById('btn-play').onclick = () => {
                 state.isRunning = true;
@@ -1104,15 +910,20 @@
                 };
             });
 
-            document.getElementById('cfg-action-time').onchange = (e) => state.config.actionTime = parseInt(e.target.value);
-            document.getElementById('cfg-pof-time').onchange = (e) => state.config.pofCycleTime = parseInt(e.target.value);
-            document.getElementById('cfg-mp-time').onchange = (e) => state.config.mpCycleTime = parseInt(e.target.value);
-
             document.querySelector('.btn-speed[data-speed="1"]').classList.add('active');
 
+            document.getElementById('btn-export-csv').onclick = exportCSV;
+            document.getElementById('btn-export-img').onclick = exportImage;
+
             requestAnimationFrame(tick);
-            window.addEventListener('resize', updateUI);
-            setTimeout(updateUI, 100);
+            window.addEventListener('resize', () => {
+                updateUI();
+                if (graphManager) graphManager.resize();
+            });
+            setTimeout(() => {
+                updateUI();
+                if (graphManager) graphManager.resize();
+            }, 100);
         };
     </script>
 </body>
