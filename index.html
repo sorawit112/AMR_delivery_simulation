@@ -499,6 +499,13 @@
 
         let graphManager;
 
+        function getPartsCount(station) {
+            if (station.trolleyState === 0) return null;
+            if (station.isConsuming) return Math.ceil(6 * (1 - station.progress / 100));
+            if (station.isRefilling) return Math.floor(6 * (station.progress / 100));
+            return station.trolleyState === 2 ? 6 : 0;
+        }
+
         function formatTime(s) {
             const h = Math.floor(s / 3600);
             const m = Math.floor((s % 3600) / 60);
@@ -525,6 +532,7 @@
                     if (trolley) {
                         trolley.classList.remove('hidden');
                         trolley.className = 'trolley ' + (station.trolleyState === 1 ? 'empty' : 'full');
+                        trolley.textContent = getPartsCount(station);
                     }
                     if (badge) {
                         badge.classList.remove('hidden');
@@ -532,11 +540,23 @@
                     }
                 } else {
                     box.classList.remove('has-trolley');
-                    if (trolley) trolley.classList.add('hidden');
+                    if (trolley) {
+                        trolley.classList.add('hidden');
+                        trolley.textContent = '';
+                    }
                     if (badge) badge.classList.add('hidden');
                 }
 
+                if (badge) {
+                    badge.classList.add('hidden');
+                }
+
+                if (badge) {
+                    badge.className = 'status-badge ' + (station.trolleyState === 0 ? 'hidden' : '');
+                }
+
                 if (indicator) {
+                    indicator.style.display = 'block';
                     indicator.className = 'indicator ' +
                         (station.isConsuming ? 'consuming' : '') +
                         (station.isRefilling ? 'refilling' : '');
@@ -558,8 +578,12 @@
                     const boxRect = stationEl.querySelector('.station-box').getBoundingClientRect();
                     const scrollX = window.scrollX;
                     const scrollY = window.scrollY;
-                    el.style.left = (boxRect.left + scrollX + boxRect.width / 2 - 25) + 'px';
-                    el.style.top = (boxRect.top + scrollY + boxRect.height / 2 - 25) + 'px';
+
+                    const width = amr.carrying ? 65 : 40;
+                    const height = amr.carrying ? 65 : 40;
+
+                    el.style.left = (boxRect.left + scrollX + boxRect.width / 2 - width / 2) + 'px';
+                    el.style.top = (boxRect.top + scrollY + boxRect.height / 2 - height / 2) + 'px';
 
                     // Hide AMR icon during movement
                     if (amr.state === 'MOVING') {
@@ -567,6 +591,12 @@
                     } else {
                         el.style.display = 'flex';
                     }
+
+                    // Update carrying classes and content
+                    el.classList.toggle('carrying', !!amr.carrying);
+                    el.classList.toggle('carrying-full', amr.carrying === 'FULL');
+                    el.classList.toggle('carrying-empty', amr.carrying === 'EMPTY');
+                    el.textContent = amr.carrying ? (amr.carrying === 'FULL' ? '6' : '0') : amr.id;
                 }
 
                 if (statusCard) {
@@ -638,20 +668,35 @@
                         // Draw moving label/icon
                         const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
 
+                        const amrSize = amr.carrying ? 60 : 35;
+                        const rectWidth = amr.carrying ? amrSize : amrSize + 30; // More space for "AMR #"
+                        const rectHeight = amrSize;
+                        
                         const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                        rect.setAttribute("x", curX - 25);
-                        rect.setAttribute("y", curY - 10);
-                        rect.setAttribute("width", 50);
-                        rect.setAttribute("height", 20);
-                        rect.setAttribute("rx", 5);
+                        rect.setAttribute("x", curX - rectWidth / 2);
+                        rect.setAttribute("y", curY - rectHeight / 2);
+                        rect.setAttribute("width", rectWidth);
+                        rect.setAttribute("height", rectHeight);
+                        rect.setAttribute("rx", amr.carrying ? 12 : 8);
                         rect.setAttribute("class", `transition-label-bg amr${amr.id}`);
+
+                        // Add border for carrying status in transition
+                        if (amr.carrying === 'FULL') {
+                            rect.style.stroke = 'var(--trolley-full)';
+                            rect.style.strokeWidth = '3px';
+                        } else if (amr.carrying === 'EMPTY') {
+                            rect.style.stroke = 'var(--trolley-empty)';
+                            rect.style.strokeWidth = '3px';
+                        }
+
                         g.appendChild(rect);
 
                         const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
                         text.setAttribute("x", curX);
                         text.setAttribute("y", curY);
                         text.setAttribute("class", "transition-label-text amr-dark");
-                        text.textContent = `AMR ${amr.id}`;
+                        text.style.fontSize = amr.carrying ? "1.2rem" : "0.8rem";
+                        text.textContent = amr.carrying ? (amr.carrying === 'FULL' ? '6' : '0') : `AMR ${amr.id}`;
                         g.appendChild(text);
 
                         svg.appendChild(g);
