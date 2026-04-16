@@ -234,35 +234,56 @@
         function loadConfig() {
             const stream = state.activeStream;
             const configKey = `amr_sim_config_${stream}`;
-            const defaultConfig = stream === 'engine' ? {
-                actionTime: 30,
+
+            // Unified defaults from config.html
+            const ENGINE_DEFAULTS = {
+                actionTime: 60,
                 pofCycleTime: 600,
-                mpCycleTime: 900,
+                mpCycleTime: 420,
                 travelTimes: {
-                    'HOME-POF': { 'POF-A': 45, 'POF-B': 50 },
-                    'POF-A': { 'MP1': 100, 'MP2': 110, 'MP3': 120, 'MP4': 130, 'HOME-POF': 45 },
-                    'POF-B': { 'MP1': 105, 'MP2': 115, 'MP3': 125, 'MP4': 135, 'HOME-POF': 50 },
-                    'MP1': { 'W1': 60 }, 'MP2': { 'W1': 70 }, 'MP3': { 'W1': 80 }, 'MP4': { 'W1': 90 },
-                    'W1': { 'POF-A': 70, 'POF-B': 75 }
+                    'HOME-POF': { 'POF-A': 90, 'POF-B': 100 },
+                    'POF-A': { 'MP1': 245, 'MP2': 264, 'MP3': 191, 'MP4': 184, 'HOME-POF': 190 },
+                    'POF-B': { 'MP1': 240, 'MP2': 260, 'MP3': 185, 'MP4': 180, 'HOME-POF': 190 },
+                    'MP1': { 'W1': 175, 'MP2': 36 },
+                    'MP2': { 'W1': 176, 'MP3': 123 },
+                    'MP3': { 'W1': 188, 'MP4': 30 },
+                    'MP4': { 'W1': 215, 'MP1': 95 },
+                    'W1': { 'POF-A': 90, 'POF-B': 85 }
                 }
-            } : {
-                actionTime: 45,
-                pofCycleTime: 900,
-                mpCycleTime: 600,
+            };
+
+            const TRANS_DEFAULTS = {
+                actionTime: 60,
+                pofCycleTime: 600,
+                mpCycleTime: 420,
                 travelTimes: {
-                    'HOME-POF': { 'POF-A': 45, 'POF-B': 50 },
-                    'POF-A': { 'MP1': 100, 'MP2': 110, 'MP3': 120, 'MP4': 130, 'HOME-POF': 45 },
-                    'POF-B': { 'MP1': 105, 'MP2': 115, 'MP3': 125, 'MP4': 135, 'HOME-POF': 50 },
-                    'MP1': { 'W1': 60 }, 'MP2': { 'W1': 70 }, 'MP3': { 'W1': 80 }, 'MP4': { 'W1': 90 },
+                    'HOME-POF': { 'POF-A': 60, 'POF-B': 60 },
+                    'POF-A': { 'MP1': 237, 'MP2': 246, 'MP3': 246, 'MP4': 250, 'HOME-POF': 75 },
+                    'POF-B': { 'MP1': 232, 'MP2': 240, 'MP3': 240, 'MP4': 245, 'HOME-POF': 75 },
+                    'MP1': { 'W1': 334, 'MP2': 22 },
+                    'MP2': { 'W1': 343, 'MP3': 123 },
+                    'MP3': { 'W1': 246, 'MP4': 30 },
+                    'MP4': { 'W1': 371, 'MP1': 95 },
                     'W1': { 'POF-A': 70, 'POF-B': 75 }
                 }
             };
 
-            // Fallback to legacy config if it exists and we're on engine
-            const legacyConfig = stream === 'engine' ? JSON.parse(localStorage.getItem('amr_sim_config')) : null;
+            // Auto-save logic: Ensure both configurations exist in localStorage
+            if (!localStorage.getItem('amr_sim_config_engine')) {
+                // If legacy config exists, use it for engine, otherwise use defaults
+                const legacyConfig = JSON.parse(localStorage.getItem('amr_sim_config'));
+                localStorage.setItem('amr_sim_config_engine', JSON.stringify(legacyConfig || ENGINE_DEFAULTS));
+                console.log('Auto-saved Engine configuration');
+            }
+            if (!localStorage.getItem('amr_sim_config_transmission')) {
+                localStorage.setItem('amr_sim_config_transmission', JSON.stringify(TRANS_DEFAULTS));
+                console.log('Auto-saved Transmission configuration');
+            }
 
-            state.config = JSON.parse(localStorage.getItem(configKey)) || legacyConfig || defaultConfig;
+            // Load the current active config
+            state.config = JSON.parse(localStorage.getItem(configKey));
         }
+
         loadConfig();
 
         class GraphManager {

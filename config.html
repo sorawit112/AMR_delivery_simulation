@@ -107,6 +107,15 @@
                 JSON.parse(JSON.stringify(DEFAULTS.transmission))
         };
 
+        // Auto-save logic: ensure both configurations exist in localStorage
+        if (!localStorage.getItem('amr_sim_config_engine')) {
+            localStorage.setItem('amr_sim_config_engine', JSON.stringify(configs.engine));
+        }
+        if (!localStorage.getItem('amr_sim_config_transmission')) {
+            localStorage.setItem('amr_sim_config_transmission', JSON.stringify(configs.transmission));
+        }
+
+
         function initConfigTable() {
             const config = configs[currentEditingStream];
             const tbody = document.querySelector('#config-table tbody');
