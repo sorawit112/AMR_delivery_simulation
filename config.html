@@ -23,7 +23,14 @@
 
     <div class="main-grid">
         <div class="panel config-panel">
-            <div class="panel-title">Travel Time Configuration (Seconds)</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div class="panel-title">Configuration Settings</div>
+                <div class="stream-editor-toggle">
+                    <button id="btn-edit-engine">Engine Stream</button>
+                    <button id="btn-edit-transmission">Transmission Stream</button>
+                </div>
+            </div>
+            <div class="panel-title" style="margin-top: 1rem;">Travel Time Configuration (Seconds)</div>
             <table id="config-table">
                 <thead>
                     <tr>
@@ -54,22 +61,54 @@
     </div>
 
     <script>
+        const ENGINE_TRAVEL_TIMES = {
+            'HOME-POF': { 'POF-A': 90, 'POF-B': 100 },
+            'POF-A': { 'MP1': 245, 'MP2': 264, 'MP3': 191, 'MP4': 184, 'HOME-POF': 190 },
+            'POF-B': { 'MP1': 240, 'MP2': 260, 'MP3': 185, 'MP4': 180, 'HOME-POF': 190 },
+            'MP1': { 'W1': 175, 'MP2': 36 },
+            'MP2': { 'W1': 176, 'MP3': 123 },
+            'MP3': { 'W1': 188, 'MP4': 30 },
+            'MP4': { 'W1': 215, 'MP1': 95 },
+            'W1': { 'POF-A': 90, 'POF-B': 85 }
+        };
+
+        const TRANS_TRAVEL_TIMES = {
+            'HOME-POF': { 'POF-A': 60, 'POF-B': 60 },
+            'POF-A': { 'MP1': 237, 'MP2': 246, 'MP3': 246, 'MP4': 250, 'HOME-POF': 75 },
+            'POF-B': { 'MP1': 232, 'MP2': 240, 'MP3': 240, 'MP4': 245, 'HOME-POF': 75 },
+            'MP1': { 'W1': 334, 'MP2': 22 },
+            'MP2': { 'W1': 343, 'MP3': 123 },
+            'MP3': { 'W1': 246, 'MP4': 30 },
+            'MP4': { 'W1': 371, 'MP1': 95 },
+            'W1': { 'POF-A': 70, 'POF-B': 75 }
+        };
+
         const DEFAULTS = {
-            actionTime: 30,
-            pofCycleTime: 600,
-            mpCycleTime: 420,//7 min
-            travelTimes: {
-                'HOME-POF': { 'POF-A': 45, 'POF-B': 50 },
-                'POF-A': { 'MP1': 100, 'MP2': 110, 'MP3': 120, 'MP4': 130, 'HOME-POF': 45 },
-                'POF-B': { 'MP1': 105, 'MP2': 115, 'MP3': 125, 'MP4': 135, 'HOME-POF': 50 },
-                'MP1': { 'W1': 60 }, 'MP2': { 'W1': 70 }, 'MP3': { 'W1': 80 }, 'MP4': { 'W1': 90 },
-                'W1': { 'POF-A': 70, 'POF-B': 75 }
+            engine: {
+                actionTime: 60,
+                pofCycleTime: 600,
+                mpCycleTime: 420,
+                travelTimes: JSON.parse(JSON.stringify(ENGINE_TRAVEL_TIMES))
+            },
+            transmission: {
+                actionTime: 60,
+                pofCycleTime: 600,
+                mpCycleTime: 420,
+                travelTimes: JSON.parse(JSON.stringify(TRANS_TRAVEL_TIMES))
             }
         };
 
-        let config = JSON.parse(localStorage.getItem('amr_sim_config')) || JSON.parse(JSON.stringify(DEFAULTS));
+        let currentEditingStream = 'engine';
+        let configs = {
+            engine: JSON.parse(localStorage.getItem('amr_sim_config_engine')) ||
+                JSON.parse(localStorage.getItem('amr_sim_config')) ||
+                JSON.parse(JSON.stringify(DEFAULTS.engine)),
+            transmission: JSON.parse(localStorage.getItem('amr_sim_config_transmission')) ||
+                JSON.parse(JSON.stringify(DEFAULTS.transmission))
+        };
 
         function initConfigTable() {
+            const config = configs[currentEditingStream];
             const tbody = document.querySelector('#config-table tbody');
             const stations = ['POF-A', 'POF-B', 'MP1', 'MP2', 'MP3', 'MP4', 'W1', 'HOME-POF', 'HOME-MP'];
             tbody.innerHTML = '';
@@ -77,9 +116,13 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `<td style="font-weight: 600;">${from}</td>` + stations.map(to => {
                     if (from === to) return `<td>-</td>`;
-                    const val = (config.travelTimes[from] && config.travelTimes[from][to]) || 60;
+                    const val = (config.travelTimes[from] && config.travelTimes[from][to]) || null;
                     if (!config.travelTimes[from]) config.travelTimes[from] = {};
-                    config.travelTimes[from][to] = val;
+                    if (val === null) {
+                        return `<td>-</td>`;
+                    } else {
+                        config.travelTimes[from][to] = val;
+                    }
                     return `<td><input type="number" data-from="${from}" data-to="${to}" value="${val}"></td>`;
                 }).join('');
                 tbody.appendChild(tr);
@@ -88,9 +131,14 @@
             document.getElementById('cfg-action-time').value = config.actionTime;
             document.getElementById('cfg-pof-time').value = config.pofCycleTime;
             document.getElementById('cfg-mp-time').value = config.mpCycleTime;
+
+            // Update tab UI
+            document.getElementById('btn-edit-engine').classList.toggle('active', currentEditingStream === 'engine');
+            document.getElementById('btn-edit-transmission').classList.toggle('active', currentEditingStream === 'transmission');
         }
 
-        function saveConfig() {
+        function saveCurrentInputs() {
+            const config = configs[currentEditingStream];
             const inputs = document.querySelectorAll('#config-table input');
             inputs.forEach(input => {
                 const { from, to } = input.dataset;
@@ -101,16 +149,19 @@
             config.actionTime = parseInt(document.getElementById('cfg-action-time').value);
             config.pofCycleTime = parseInt(document.getElementById('cfg-pof-time').value);
             config.mpCycleTime = parseInt(document.getElementById('cfg-mp-time').value);
+        }
 
-            localStorage.setItem('amr_sim_config', JSON.stringify(config));
-            alert('Configuration saved successfully!');
+        function saveConfig() {
+            saveCurrentInputs();
+            localStorage.setItem(`amr_sim_config_${currentEditingStream}`, JSON.stringify(configs[currentEditingStream]));
+            alert(`${currentEditingStream.charAt(0).toUpperCase() + currentEditingStream.slice(1)} configuration saved!`);
         }
 
         function resetDefaults() {
-            if (confirm('Are you sure you want to reset all settings to defaults?')) {
-                config = JSON.parse(JSON.stringify(DEFAULTS));
+            if (confirm(`Are you sure you want to reset ${currentEditingStream} settings to defaults?`)) {
+                configs[currentEditingStream] = JSON.parse(JSON.stringify(DEFAULTS[currentEditingStream]));
                 initConfigTable();
-                localStorage.setItem('amr_sim_config', JSON.stringify(config));
+                localStorage.setItem(`amr_sim_config_${currentEditingStream}`, JSON.stringify(configs[currentEditingStream]));
             }
         }
 
@@ -118,6 +169,17 @@
             initConfigTable();
             document.getElementById('btn-save').onclick = saveConfig;
             document.getElementById('btn-reset').onclick = resetDefaults;
+
+            document.getElementById('btn-edit-engine').onclick = () => {
+                saveCurrentInputs();
+                currentEditingStream = 'engine';
+                initConfigTable();
+            };
+            document.getElementById('btn-edit-transmission').onclick = () => {
+                saveCurrentInputs();
+                currentEditingStream = 'transmission';
+                initConfigTable();
+            };
         };
     </script>
 </body>
