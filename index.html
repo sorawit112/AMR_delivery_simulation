@@ -600,9 +600,11 @@
                     const scrollX = window.scrollX;
                     const scrollY = window.scrollY;
 
-                    const width = amr.carrying ? 65 : 40;
-                    const height = amr.carrying ? 65 : 40;
+                    const width = amr.carrying ? 65 : 75;
+                    const height = amr.carrying ? 65 : 35;
 
+                    el.style.width = width + 'px';
+                    el.style.height = height + 'px';
                     el.style.left = (boxRect.left + scrollX + boxRect.width / 2 - width / 2) + 'px';
                     el.style.top = (boxRect.top + scrollY + boxRect.height / 2 - height / 2) + 'px';
 
@@ -617,7 +619,8 @@
                     el.classList.toggle('carrying', !!amr.carrying);
                     el.classList.toggle('carrying-full', amr.carrying === 'FULL');
                     el.classList.toggle('carrying-empty', amr.carrying === 'EMPTY');
-                    el.textContent = amr.carrying ? (amr.carrying === 'FULL' ? '6' : '0') : amr.id;
+                    el.textContent = amr.carrying ? (amr.carrying === 'FULL' ? '6' : '0') : `AMR ${amr.id}`;
+                    el.style.fontSize = amr.carrying ? "1.5rem" : "0.8rem";
                 }
 
                 if (statusCard) {
