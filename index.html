@@ -692,14 +692,15 @@
                         const amrSize = amr.carrying ? 60 : 35;
                         const rectWidth = amr.carrying ? amrSize : amrSize + 30; // More space for "AMR #"
                         const rectHeight = amrSize;
-                        
+
                         const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                         rect.setAttribute("x", curX - rectWidth / 2);
                         rect.setAttribute("y", curY - rectHeight / 2);
                         rect.setAttribute("width", rectWidth);
                         rect.setAttribute("height", rectHeight);
                         rect.setAttribute("rx", amr.carrying ? 12 : 8);
-                        rect.setAttribute("class", `transition-label-bg amr${amr.id}`);
+                        rect.setAttribute("class", `transition-label-bg amr${amr.id} ${amr.carrying ? 'carrying-' + amr.carrying.toLowerCase() : ''}`);
+
 
                         // Add border for carrying status in transition
                         if (amr.carrying === 'FULL') {

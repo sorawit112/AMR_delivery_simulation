@@ -339,7 +339,10 @@ button.active {
 
 .amr-icon.carrying-empty {
     border: 3px solid var(--trolley-empty);
+    filter: saturate(0.4);
+    opacity: 0.9;
 }
+
 
 .amr-icon.carrying-full {
     border: 3px solid var(--trolley-full);
@@ -616,7 +619,12 @@ input {
     stroke: white;
 }
 
+.transition-label-bg.carrying-empty {
+    filter: saturate(0.4);
+}
+
 .transition-label-text.amr-dark {
+
     fill: var(--bg-color);
 }
 
